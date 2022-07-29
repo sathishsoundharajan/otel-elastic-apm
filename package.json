@@ -1,0 +1,21 @@
+{
+  "name": "otel-elastic-apm",
+  "version": "1.0.0",
+  "description": "OTEL Collector & Elastic Node.js Demo",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "sathishwelcomez@ymail.com",
+  "license": "MIT",
+  "dependencies": {
+    "@opentelemetry/auto-instrumentations-node": "0.31.0",
+    "@opentelemetry/instrumentation-hapi": "0.29.0",
+    "@opentelemetry/sdk-node": "0.30.0",
+    "@opentelemetry/instrumentation-amqplib": "^0.30.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.31.0",
+    "hapi": "^17.8.5"
+  }
+}

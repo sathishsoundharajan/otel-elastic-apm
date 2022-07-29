@@ -1,0 +1,80 @@
+version: '3'
+services:
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.8.23
+    container_name: elasticsearch
+    environment:
+      - xpack.security.enabled=false
+      - discovery.type=single-node
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+      - 9300:9300
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -vq '\"status\":\"red\"'"]
+      retries: 10
+      interval: 20s
+
+  kibana:
+    container_name: kibana
+    image: docker.elastic.co/kibana/kibana:6.8.23
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - 5601:5601
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--write-out", "'HTTP %{http_code}'", "--silent", "--output", "/dev/null", "http://localhost:5601/"]
+      retries: 10
+      interval: 10s
+
+  elastic-apm:
+    container_name: elastic-apm
+    build:
+      context: ../
+      dockerfile: ./build/elastic-apm/Dockerfile
+    ports:
+      - 8200:8200
+      - 6060:6060
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - SETGID
+      - SETUID
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: zipkin
+    ports:
+      - 9411:9411
+
+  otel-collector:
+    container_name: otel-collector
+    build:
+      context: ../
+      dockerfile: ./build/collector/Dockerfile
+    ports:
+      - 4318:4318
+      - 13133:13133
+
+volumes:
+  elasticsearch-data:
+    driver: local
