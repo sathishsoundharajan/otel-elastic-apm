@@ -1,5 +1,4 @@
 apm-server:
-  host: "localhost:8200"
   rum:
     enabled: true
   kibana:

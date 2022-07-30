@@ -25,6 +25,8 @@ services:
       test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -vq '\"status\":\"red\"'"]
       retries: 10
       interval: 20s
+    networks:
+      - opentelemetry
 
   kibana:
     container_name: kibana
@@ -40,6 +42,8 @@ services:
       test: ["CMD", "curl", "--write-out", "'HTTP %{http_code}'", "--silent", "--output", "/dev/null", "http://localhost:5601/"]
       retries: 10
       interval: 10s
+    networks:
+      - opentelemetry
 
   elastic-apm:
     container_name: elastic-apm
@@ -48,7 +52,6 @@ services:
       dockerfile: ./build/elastic-apm/Dockerfile
     ports:
       - 8200:8200
-      - 6060:6060
     cap_drop:
       - ALL
     cap_add:
@@ -59,12 +62,22 @@ services:
     depends_on:
       elasticsearch:
         condition: service_healthy
+      kibana:
+        condition: service_healthy
+    healthcheck:
+      interval: 10s
+      retries: 12
+      test: curl --write-out 'HTTP %{http_code}' --fail --silent --output /dev/null http://localhost:8200/
+    networks:
+      - opentelemetry
 
   zipkin:
     image: openzipkin/zipkin
     container_name: zipkin
     ports:
       - 9411:9411
+    networks:
+      - opentelemetry
 
   otel-collector:
     container_name: otel-collector
@@ -74,7 +87,13 @@ services:
     ports:
       - 4318:4318
       - 13133:13133
+    networks:
+      - opentelemetry
 
 volumes:
   elasticsearch-data:
     driver: local
+
+networks:
+  opentelemetry:
+    driver: bridge 
