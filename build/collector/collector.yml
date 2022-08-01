@@ -16,8 +16,10 @@ exporters:
   zipkin:
     endpoint: "http://zipkin:9411/api/v2/spans"
 
-  elastic:
-    apm_server_url: http://elastic-apm:8200
+  otlp/elastic:
+    endpoint: http://elastic-apm:8200
+    tls:
+      insecure: true
 
 extensions:
   health_check:
@@ -33,4 +35,4 @@ service:
     traces:
       receivers: [ zipkin, otlp ]
       processors: [ batch ]
-      exporters: [ zipkin, elastic ]
+      exporters: [ logging, zipkin, otlp/elastic ]
